@@ -32,14 +32,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestSendMetric(t *testing.T) {
-	env, err := newEnvironment(nc, metricsSubject)
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, "can't create env")
-	}
-
 	// start listening for the metric
 	msgs := make(chan *nats.Msg)
-	sub, err := nc.Subscribe(metricsSubject, func(msg *nats.Msg) {
+	sub, env := listenUntil(t, func(msg *nats.Msg) {
 		msgs <- msg
 		close(msgs)
 	})
@@ -48,7 +43,7 @@ func TestSendMetric(t *testing.T) {
 	// create the metric
 	m := env.newMetric("something", CounterType, nil)
 	m.Value = 123
-	err = m.send(nil)
+	err := m.send(nil)
 	assert.Nil(t, err)
 
 	select {
@@ -67,4 +62,37 @@ func TestSendMetric(t *testing.T) {
 	}
 
 	// validate counts
+	checkCounters(t, 1, 0, 0, env)
+}
+
+func TestSendUnknownType(t *testing.T) {
+	sub, env := listenUntil(t, func(msg *nats.Msg) {
+		assert.Fail(t, "should have gotten nothing!")
+	})
+	defer sub.Unsubscribe()
+
+	junkType := new(MetricType)
+	m := env.newMetric("something", *junkType, nil)
+	err := m.send(nil)
+	assert.NotNil(t, err)
+}
+
+func listenUntil(t *testing.T, f func(msg *nats.Msg)) (*nats.Subscription, *environment) {
+	sub, err := nc.Subscribe(metricsSubject, f)
+	if err != nil {
+		assert.FailNow(t, "Failed to subscribe")
+	}
+
+	env, err := newEnvironment(nc, metricsSubject)
+	if err != nil {
+		assert.FailNow(t, "Failed to create test env")
+	}
+
+	return sub, env
+}
+
+func checkCounters(t *testing.T, counters, timers, gauges int, env *environment) {
+	assert.EqualValues(t, counters, env.countersSent)
+	assert.EqualValues(t, timers, env.timersSent)
+	assert.EqualValues(t, gauges, env.gaugesSent)
 }

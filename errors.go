@@ -12,3 +12,8 @@ func (e errString) Error() string {
 type InitError struct {
 	errString
 }
+
+// UnknownMetricTypeError inidcates that we're sending a type we didn't expect
+type UnknownMetricTypeError struct {
+	errString
+}

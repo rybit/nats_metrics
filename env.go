@@ -1,7 +1,9 @@
 package metrics
 
 import (
+	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/nats-io/nats"
 )
@@ -63,7 +65,16 @@ func (e *environment) send(m *metric, instanceDims *map[string]interface{}) erro
 	// instance
 	addAll(&metricToSend.Dims, instanceDims)
 
-	// TODO count it
+	switch m.Type {
+	case CounterType:
+		atomic.AddInt64(&e.countersSent, 1)
+	case TimerType:
+		atomic.AddInt64(&e.timersSent, 1)
+	case GaugeType:
+		atomic.AddInt64(&e.gaugesSent, 1)
+	default:
+		return UnknownMetricTypeError{errString{fmt.Sprintf("unknown metric type: %s", m.Type)}}
+	}
 
 	return e.nc.Publish(e.subject, &metricToSend)
 }
