@@ -39,14 +39,6 @@ type environment struct {
 	gaugesSent   int64
 }
 
-func (e *environment) newCounter(name string, metricDims *map[string]interface{}) Counter {
-	return e.newMetric(name, CounterType, metricDims)
-}
-
-//func (e *environment) newGauge(name string, metricDims *map[string]interface{}) Gauge {
-//	return e.newMetric(name, GaugeType, metricDims)
-//}
-
 func (e *environment) send(m *metric, instanceDims *map[string]interface{}) error {
 	if err := e.isReady(); err != nil {
 		return err

@@ -1,18 +1,13 @@
 package metrics
 
-// NewCounter creates a named counter with these dimensions
-func NewCounter(name string, metricDims *map[string]interface{}) (Counter, error) {
-	if err := checkEnv(); err != nil {
-		return nil, err
-	}
-
-	return globalEnv.newCounter(name, metricDims), nil
-}
-
 // Counter will send when an event occurs
 type Counter interface {
 	Count(*map[string]interface{}) error
 	CountN(int64, *map[string]interface{}) error
+}
+
+func (e *environment) newCounter(name string, metricDims *map[string]interface{}) Counter {
+	return e.newMetric(name, CounterType, metricDims)
 }
 
 // Count will count 1 occurrence of an event

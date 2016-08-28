@@ -33,11 +33,7 @@ func TestMain(m *testing.M) {
 
 func TestSendMetric(t *testing.T) {
 	// start listening for the metric
-	msgs := make(chan *nats.Msg)
-	sub, env := listenUntil(t, func(msg *nats.Msg) {
-		msgs <- msg
-		close(msgs)
-	})
+	sub, env, msgs := listenForOne(t)
 	defer sub.Unsubscribe()
 
 	// create the metric
@@ -46,39 +42,24 @@ func TestSendMetric(t *testing.T) {
 	err := m.send(nil)
 	assert.Nil(t, err)
 
-	select {
-	case msg := <-msgs:
-		m := new(metric)
-		err = json.Unmarshal(msg.Data, m)
-		assert.Nil(t, err)
-
+	thisOrTimeout(t, msgs, func(m *metric) {
 		assert.Equal(t, "something", m.Name)
 		assert.EqualValues(t, m.Value, 123)
 		assert.Equal(t, m.Type, CounterType)
 		assert.NotNil(t, m.Dims)
 		assert.Len(t, m.Dims, 0)
-	case <-time.After(time.Second):
-		assert.FailNow(t, "didn't get the message in time")
-	}
+	})
 
 	// validate counts
 	checkCounters(t, 1, 0, 0, env)
 }
 
-func TestSendUnknownType(t *testing.T) {
-	sub, env := listenUntil(t, func(msg *nats.Msg) {
-		assert.Fail(t, "should have gotten nothing!")
+func listenForOne(t *testing.T) (*nats.Subscription, *environment, chan *nats.Msg) {
+	msgs := make(chan *nats.Msg)
+	sub, err := nc.Subscribe(metricsSubject, func(msg *nats.Msg) {
+		msgs <- msg
+		close(msgs)
 	})
-	defer sub.Unsubscribe()
-
-	junkType := new(MetricType)
-	m := env.newMetric("something", *junkType, nil)
-	err := m.send(nil)
-	assert.NotNil(t, err)
-}
-
-func listenUntil(t *testing.T, f func(msg *nats.Msg)) (*nats.Subscription, *environment) {
-	sub, err := nc.Subscribe(metricsSubject, f)
 	if err != nil {
 		assert.FailNow(t, "Failed to subscribe")
 	}
@@ -88,11 +69,22 @@ func listenUntil(t *testing.T, f func(msg *nats.Msg)) (*nats.Subscription, *envi
 		assert.FailNow(t, "Failed to create test env")
 	}
 
-	return sub, env
+	return sub, env, msgs
 }
 
 func checkCounters(t *testing.T, counters, timers, gauges int, env *environment) {
 	assert.EqualValues(t, counters, env.countersSent)
 	assert.EqualValues(t, timers, env.timersSent)
 	assert.EqualValues(t, gauges, env.gaugesSent)
+}
+
+func thisOrTimeout(t *testing.T, msgs chan *nats.Msg, f func(m *metric)) {
+	select {
+	case msg := <-msgs:
+		m := new(metric)
+		err := json.Unmarshal(msg.Data, m)
+		assert.Nil(t, err)
+	case <-time.After(time.Second):
+		assert.FailNow(t, "didn't get the message in time")
+	}
 }

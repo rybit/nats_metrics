@@ -1,19 +1,13 @@
 package metrics
 
 import (
-	"encoding/json"
 	"testing"
-	"time"
 
-	"github.com/nats-io/nats"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDimensionalOverride(t *testing.T) {
-	msgs := make(chan *nats.Msg)
-	sub, env := listenUntil(t, func(msg *nats.Msg) {
-		msgs <- msg
-	})
+	sub, env, msgs := listenForOne(t)
 	defer sub.Unsubscribe()
 
 	env.AddDimension("global-val", 12)
@@ -29,13 +23,7 @@ func TestDimensionalOverride(t *testing.T) {
 		"instance-overide": "instance-level",
 		"instance-val":     789,
 	})
-	select {
-	case msg := <-msgs:
-		m := new(metric)
-		err := json.Unmarshal(msg.Data, m)
-		assert.Nil(t, err)
-
-		// check the dimensions
+	thisOrTimeout(t, msgs, func(m *metric) {
 		assert.EqualValues(t, 5, len(m.Dims))
 		expected := map[string]interface{}{
 			"global-val":       12,
@@ -49,7 +37,5 @@ func TestDimensionalOverride(t *testing.T) {
 			assert.True(t, exists)
 			assert.EqualValues(t, v, dimVal)
 		}
-	case <-time.After(time.Second):
-		assert.FailNow(t, "failed to get messages in time")
-	}
+	})
 }

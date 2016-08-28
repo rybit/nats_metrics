@@ -35,3 +35,21 @@ func checkEnv() error {
 
 	return globalEnv.isReady()
 }
+
+// NewCounter creates a named counter with these dimensions
+func NewCounter(name string, metricDims *map[string]interface{}) (Counter, error) {
+	if err := checkEnv(); err != nil {
+		return nil, err
+	}
+
+	return globalEnv.newCounter(name, metricDims), nil
+}
+
+// NewGauge creates a named gague with these dimensions
+func NewGauge(name string, metricDims *map[string]interface{}) (Gauge, error) {
+	if err := checkEnv(); err != nil {
+		return nil, err
+	}
+
+	return globalEnv.newGauge(name, metricDims), nil
+}
