@@ -3,9 +3,12 @@ package metrics
 import "sync"
 
 const (
-	TimerType   MetricType = "timer"
+	// TimerType is the type for timers
+	TimerType MetricType = "timer"
+	// CounterType is the type for timers
 	CounterType MetricType = "counter"
-	GaugeType   MetricType = "gauge"
+	// GaugeType is the type for gauges
+	GaugeType MetricType = "gauge"
 )
 
 // MetricType describes what type the metric is

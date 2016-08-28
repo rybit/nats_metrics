@@ -17,3 +17,8 @@ type InitError struct {
 type UnknownMetricTypeError struct {
 	errString
 }
+
+// DoubleInitError indicates that init as called once already init-ed
+type DoubleInitError struct {
+	errString
+}

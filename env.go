@@ -39,6 +39,14 @@ type environment struct {
 	gaugesSent   int64
 }
 
+func (e *environment) newCounter(name string, metricDims *map[string]interface{}) Counter {
+	return e.newMetric(name, CounterType, metricDims)
+}
+
+//func (e *environment) newGauge(name string, metricDims *map[string]interface{}) Gauge {
+//	return e.newMetric(name, GaugeType, metricDims)
+//}
+
 func (e *environment) send(m *metric, instanceDims *map[string]interface{}) error {
 	if err := e.isReady(); err != nil {
 		return err
@@ -77,6 +85,12 @@ func (e *environment) send(m *metric, instanceDims *map[string]interface{}) erro
 	}
 
 	return e.nc.Publish(e.subject, &metricToSend)
+}
+
+func (e *environment) AddDimension(k string, v interface{}) {
+	e.dimlock.Lock()
+	defer e.dimlock.Unlock()
+	e.globalDims[k] = v
 }
 
 func (e *environment) isReady() error {
