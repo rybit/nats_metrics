@@ -2,21 +2,21 @@ package metrics
 
 // Counter will send when an event occurs
 type Counter interface {
-	Count(*map[string]interface{}) error
-	CountN(int64, *map[string]interface{}) error
+	Count(*DimMap) error
+	CountN(int64, *DimMap) error
 }
 
-func (e *environment) newCounter(name string, metricDims *map[string]interface{}) Counter {
+func (e *environment) newCounter(name string, metricDims *DimMap) Counter {
 	return e.newMetric(name, CounterType, metricDims)
 }
 
 // Count will count 1 occurrence of an event
-func (m *metric) Count(instanceDims *map[string]interface{}) error {
+func (m *metric) Count(instanceDims *DimMap) error {
 	return m.CountN(1, instanceDims)
 }
 
 //CountN will count N occurrences of an event
-func (m *metric) CountN(val int64, instanceDims *map[string]interface{}) error {
+func (m *metric) CountN(val int64, instanceDims *DimMap) error {
 	m.Value = val
 	return m.send(instanceDims)
 }

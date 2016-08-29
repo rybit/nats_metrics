@@ -5,7 +5,7 @@ import "time"
 // Timer will measure the time between two events and send that
 type Timer interface {
 	Start() time.Time
-	Stop(instanceDims *map[string]interface{}) (time.Duration, error)
+	Stop(instanceDims *DimMap) (time.Duration, error)
 }
 
 type timer struct {
@@ -13,7 +13,7 @@ type timer struct {
 	startTime *time.Time
 }
 
-func (e *environment) newTimer(name string, metricDims *map[string]interface{}) Timer {
+func (e *environment) newTimer(name string, metricDims *DimMap) Timer {
 	m := e.newMetric(name, TimerType, metricDims)
 	return &timer{
 		metric: *m,
@@ -26,7 +26,7 @@ func (t *timer) Start() time.Time {
 	return now
 }
 
-func (t *timer) Stop(instanceDims *map[string]interface{}) (time.Duration, error) {
+func (t *timer) Stop(instanceDims *DimMap) (time.Duration, error) {
 	now := time.Now()
 
 	if t.startTime == nil {

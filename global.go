@@ -28,6 +28,16 @@ func Init(nc *nats.Conn, subject string) error {
 	return globalEnv.isReady()
 }
 
+// AddDimension will let you store a dimension in the global space
+func AddDimension(key string, value interface{}) error {
+	if err := checkEnv(); err != nil {
+		return err
+	}
+
+	globalEnv.AddDimension(key, value)
+	return nil
+}
+
 func checkEnv() error {
 	if globalEnv == nil {
 		return InitError{errString{"the global environment hasn't been configured"}}
@@ -37,7 +47,7 @@ func checkEnv() error {
 }
 
 // NewCounter creates a named counter with these dimensions
-func NewCounter(name string, metricDims *map[string]interface{}) (Counter, error) {
+func NewCounter(name string, metricDims *DimMap) (Counter, error) {
 	if err := checkEnv(); err != nil {
 		return nil, err
 	}
@@ -45,11 +55,20 @@ func NewCounter(name string, metricDims *map[string]interface{}) (Counter, error
 	return globalEnv.newCounter(name, metricDims), nil
 }
 
-// NewGauge creates a named gague with these dimensions
-func NewGauge(name string, metricDims *map[string]interface{}) (Gauge, error) {
+// NewGauge creates a named gauge with these dimensions
+func NewGauge(name string, metricDims *DimMap) (Gauge, error) {
 	if err := checkEnv(); err != nil {
 		return nil, err
 	}
 
 	return globalEnv.newGauge(name, metricDims), nil
+}
+
+// NewTimer creates a named timer with these dimensions
+func NewTimer(name string, metricDims *DimMap) (Timer, error) {
+	if err := checkEnv(); err != nil {
+		return nil, err
+	}
+
+	return globalEnv.newTimer(name, metricDims), nil
 }

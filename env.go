@@ -18,7 +18,7 @@ func newEnvironment(nc *nats.Conn, subject string) (*environment, error) {
 		subject:    subject,
 		nc:         econn,
 		dimlock:    sync.Mutex{},
-		globalDims: make(map[string]interface{}),
+		globalDims: DimMap{},
 	}
 	if err := env.isReady(); err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func newEnvironment(nc *nats.Conn, subject string) (*environment, error) {
 
 type environment struct {
 	subject    string
-	globalDims map[string]interface{}
+	globalDims DimMap
 	dimlock    sync.Mutex
 	nc         *nats.EncodedConn
 
@@ -39,7 +39,7 @@ type environment struct {
 	gaugesSent   int64
 }
 
-func (e *environment) send(m *metric, instanceDims *map[string]interface{}) error {
+func (e *environment) send(m *metric, instanceDims *DimMap) error {
 	if err := e.isReady(); err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (e *environment) send(m *metric, instanceDims *map[string]interface{}) erro
 		Type:  m.Type,
 		Value: m.Value,
 		Name:  m.Name,
-		Dims:  make(map[string]interface{}),
+		Dims:  DimMap{},
 	}
 
 	// global
@@ -95,7 +95,7 @@ func (e *environment) isReady() error {
 	return nil
 }
 
-func addAll(into *map[string]interface{}, from *map[string]interface{}) {
+func addAll(into *DimMap, from *DimMap) {
 	if into != nil {
 		if from != nil {
 			for k, v := range *from {
@@ -105,11 +105,11 @@ func addAll(into *map[string]interface{}, from *map[string]interface{}) {
 	}
 }
 
-func (e *environment) newMetric(name string, t MetricType, dims *map[string]interface{}) *metric {
+func (e *environment) newMetric(name string, t MetricType, dims *DimMap) *metric {
 	m := &metric{
 		Name: name,
 		Type: t,
-		Dims: make(map[string]interface{}),
+		Dims: make(DimMap),
 
 		env:     e,
 		dimlock: sync.Mutex{},

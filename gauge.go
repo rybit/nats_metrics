@@ -4,9 +4,9 @@ import "sync"
 
 // Gauge keeps a running measure of the value at that moment
 type Gauge interface {
-	Increment(*map[string]interface{}) error
-	Decrement(*map[string]interface{}) error
-	Set(int64, *map[string]interface{}) error
+	Increment(*DimMap) error
+	Decrement(*DimMap) error
+	Set(int64, *DimMap) error
 }
 
 type gauge struct {
@@ -14,7 +14,7 @@ type gauge struct {
 	valueLock sync.Mutex
 }
 
-func (e *environment) newGauge(name string, metricDims *map[string]interface{}) Gauge {
+func (e *environment) newGauge(name string, metricDims *DimMap) Gauge {
 	m := e.newMetric(name, GaugeType, metricDims)
 	return &gauge{
 		metric:    *m,
@@ -22,21 +22,21 @@ func (e *environment) newGauge(name string, metricDims *map[string]interface{}) 
 	}
 }
 
-func (m *gauge) Increment(instanceDims *map[string]interface{}) error {
+func (m *gauge) Increment(instanceDims *DimMap) error {
 	m.valueLock.Lock()
 	defer m.valueLock.Unlock()
 	m.Value++
 	return m.send(instanceDims)
 }
 
-func (m *gauge) Decrement(instanceDims *map[string]interface{}) error {
+func (m *gauge) Decrement(instanceDims *DimMap) error {
 	m.valueLock.Lock()
 	defer m.valueLock.Unlock()
 	m.Value--
 	return m.send(instanceDims)
 }
 
-func (m *gauge) Set(val int64, instanceDims *map[string]interface{}) error {
+func (m *gauge) Set(val int64, instanceDims *DimMap) error {
 	m.valueLock.Lock()
 	defer m.valueLock.Unlock()
 	m.Value = val

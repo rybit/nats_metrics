@@ -15,10 +15,10 @@ const (
 type MetricType string
 
 type metric struct {
-	Name  string                 `json:"name"`
-	Type  MetricType             `json:"type"`
-	Value int64                  `json:"value"`
-	Dims  map[string]interface{} `json:"dimensions"`
+	Name  string     `json:"name"`
+	Type  MetricType `json:"type"`
+	Value int64      `json:"value"`
+	Dims  DimMap     `json:"dimensions"`
 
 	dimlock sync.Mutex
 	env     *environment
@@ -32,6 +32,9 @@ func (m *metric) AddDimension(key string, value interface{}) *metric {
 	return m
 }
 
-func (m *metric) send(instanceDims *map[string]interface{}) error {
+func (m *metric) send(instanceDims *DimMap) error {
 	return m.env.send(m, instanceDims)
 }
+
+// DimMap is a map of dimensions
+type DimMap map[string]interface{}

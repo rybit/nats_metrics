@@ -13,19 +13,19 @@ func TestDimensionalOverride(t *testing.T) {
 	env.AddDimension("global-val", 12)
 	env.AddDimension("metric-overide", "global-level")
 	env.AddDimension("instance-overide", "global-level")
-	m := env.newMetric("thing.one", CounterType, &map[string]interface{}{
+	m := env.newMetric("thing.one", CounterType, &DimMap{
 		"metric-val":       456,
 		"metric-overide":   "metric-level",
 		"instance-overide": "metric-level",
 	})
 
-	m.send(&map[string]interface{}{
+	m.send(&DimMap{
 		"instance-overide": "instance-level",
 		"instance-val":     789,
 	})
 	thisOrTimeout(t, msgs, func(m *metric) {
 		assert.EqualValues(t, 5, len(m.Dims))
-		expected := map[string]interface{}{
+		expected := DimMap{
 			"global-val":       12,
 			"metric-overide":   "metric-level",
 			"instance-overide": "instance-level",
