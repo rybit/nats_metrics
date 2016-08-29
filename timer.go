@@ -1,0 +1,40 @@
+package metrics
+
+import "time"
+
+// Timer will measure the time between two events and send that
+type Timer interface {
+	Start() time.Time
+	Stop(instanceDims *map[string]interface{}) (time.Duration, error)
+}
+
+type timer struct {
+	metric
+	startTime *time.Time
+}
+
+func (e *environment) newTimer(name string, metricDims *map[string]interface{}) Timer {
+	m := e.newMetric(name, TimerType, metricDims)
+	return &timer{
+		metric: *m,
+	}
+}
+
+func (t *timer) Start() time.Time {
+	now := time.Now()
+	t.startTime = &now
+	return now
+}
+
+func (t *timer) Stop(instanceDims *map[string]interface{}) (time.Duration, error) {
+	now := time.Now()
+
+	if t.startTime == nil {
+		return 0, NotStartedError{errString{"the timer hasn't been started yet"}}
+	}
+
+	diff := now.Sub(*t.startTime)
+	t.Value = int64(diff)
+
+	return diff, t.send(instanceDims)
+}

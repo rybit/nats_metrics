@@ -22,3 +22,8 @@ type UnknownMetricTypeError struct {
 type DoubleInitError struct {
 	errString
 }
+
+// NotStartedError indicates that stop is called before start on a timer
+type NotStartedError struct {
+	errString
+}
