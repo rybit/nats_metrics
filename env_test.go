@@ -33,35 +33,32 @@ func TestMain(m *testing.M) {
 
 func TestSendMetric(t *testing.T) {
 	// start listening for the metric
-	sub, env, msgs := listenForOne(t)
+	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
 	// create the metric
-	m := env.newMetric("something", CounterType, nil)
-	m.Value = 123
-	err := m.send(nil)
+	sender := env.newMetric("something", CounterType, nil)
+	sender.Value = 123
+	err := sender.send(nil)
 	assert.Nil(t, err)
 
-	thisOrTimeout(t, msgs, func(m *metric) {
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
 		assert.Equal(t, "something", m.Name)
 		assert.EqualValues(t, m.Value, 123)
 		assert.Equal(t, m.Type, CounterType)
 		assert.NotNil(t, m.Dims)
 		assert.Len(t, m.Dims, 0)
-	})
+	}
 
 	// validate counts
 	checkCounters(t, 1, 0, 0, env)
 }
 
-func listenForOne(t *testing.T) (*nats.Subscription, *environment, chan *nats.Msg) {
-	msgs := make(chan *nats.Msg)
-	sub, err := nc.Subscribe(metricsSubject, func(msg *nats.Msg) {
-		msgs <- msg
-		close(msgs)
-	})
+func subscribe(t *testing.T) (*nats.Subscription, *environment) {
+	sub, err := nc.SubscribeSync(metricsSubject)
 	if err != nil {
-		assert.FailNow(t, "Failed to subscribe")
+		assert.FailNow(t, "Failed to subscribe: "+err.Error())
 	}
 
 	env, err := newEnvironment(nc, metricsSubject)
@@ -69,7 +66,7 @@ func listenForOne(t *testing.T) (*nats.Subscription, *environment, chan *nats.Ms
 		assert.FailNow(t, "Failed to create test env")
 	}
 
-	return sub, env, msgs
+	return sub, env
 }
 
 func checkCounters(t *testing.T, counters, timers, gauges int, env *environment) {
@@ -78,13 +75,14 @@ func checkCounters(t *testing.T, counters, timers, gauges int, env *environment)
 	assert.EqualValues(t, gauges, env.gaugesSent)
 }
 
-func thisOrTimeout(t *testing.T, msgs chan *nats.Msg, f func(m *metric)) {
-	select {
-	case msg := <-msgs:
-		m := new(metric)
-		err := json.Unmarshal(msg.Data, m)
-		assert.Nil(t, err)
-	case <-time.After(time.Second):
-		assert.FailNow(t, "didn't get the message in time")
+func readOne(t *testing.T, sub *nats.Subscription) *metric {
+	msg, err := sub.NextMsg(time.Second)
+	if err != nil {
+		assert.Fail(t, "Failed waiting for a message: "+err.Error())
+		return nil
 	}
+	m := new(metric)
+	err = json.Unmarshal(msg.Data, m)
+	assert.Nil(t, err)
+	return m
 }

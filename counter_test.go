@@ -7,25 +7,27 @@ import (
 )
 
 func TestCount(t *testing.T) {
-	sub, env, msgs := listenForOne(t)
+	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
 	c := env.newCounter("thingy", nil)
 	c.Count(nil)
 
-	thisOrTimeout(t, msgs, func(m *metric) {
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
 		assert.EqualValues(t, 1, m.Value)
-	})
+	}
 }
 
 func TestCountN(t *testing.T) {
-	sub, env, msgs := listenForOne(t)
+	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
 	c := env.newCounter("thingy", nil)
 	c.CountN(100, nil)
 
-	thisOrTimeout(t, msgs, func(m *metric) {
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
 		assert.EqualValues(t, 100, m.Value)
-	})
+	}
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func TestTimeIt(t *testing.T) {
-	sub, env, msgs := listenForOne(t)
+	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
 	timer := env.newTimer("something", nil)
@@ -18,8 +18,9 @@ func TestTimeIt(t *testing.T) {
 	_, err := timer.Stop(nil)
 	assert.Nil(t, err)
 
-	thisOrTimeout(t, msgs, func(m *metric) {
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
 		measured := start.Add(time.Duration(m.Value))
 		assert.WithinDuration(t, stop, measured, time.Millisecond*10)
-	})
+	}
 }

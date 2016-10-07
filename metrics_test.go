@@ -7,23 +7,25 @@ import (
 )
 
 func TestDimensionalOverride(t *testing.T) {
-	sub, env, msgs := listenForOne(t)
+	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
 	env.AddDimension("global-val", 12)
 	env.AddDimension("metric-overide", "global-level")
 	env.AddDimension("instance-overide", "global-level")
-	m := env.newMetric("thing.one", CounterType, &DimMap{
+	sender := env.newMetric("thing.one", CounterType, &DimMap{
 		"metric-val":       456,
 		"metric-overide":   "metric-level",
 		"instance-overide": "metric-level",
 	})
 
-	m.send(&DimMap{
+	sender.send(&DimMap{
 		"instance-overide": "instance-level",
 		"instance-val":     789,
 	})
-	thisOrTimeout(t, msgs, func(m *metric) {
+
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
 		assert.EqualValues(t, 5, len(m.Dims))
 		expected := DimMap{
 			"global-val":       12,
@@ -37,5 +39,5 @@ func TestDimensionalOverride(t *testing.T) {
 			assert.True(t, exists)
 			assert.EqualValues(t, v, dimVal)
 		}
-	})
+	}
 }
