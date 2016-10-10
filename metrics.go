@@ -34,7 +34,7 @@ func (m *metric) AddDimension(key string, value interface{}) *metric {
 
 func (m *metric) send(instanceDims *DimMap) error {
 	if m.env == nil {
-		return InitError{"Environment not initialized"}
+		return InitError{errString{"Environment not initialized"}}
 	}
 	return m.env.send(m, instanceDims)
 }
