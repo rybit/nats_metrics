@@ -51,3 +51,14 @@ func NewTimer(name string, metricDims *DimMap) Timer {
 	timer.Start()
 	return timer
 }
+
+// TimeBlock will just time the block provided
+func TimeBlock(name string, metricDims *DimMap, f func()) {
+	globalEnv.timeBlock(name, metricDims, f)
+}
+
+// TimeBlockErr will run the function and publish the time it took.
+// It will add the dimension 'had_error' and return the error from the internal function
+func TimeBlockErr(name string, metricDims *DimMap, f func() error) error {
+	return globalEnv.timeBlockErr(name, metricDims, f)
+}

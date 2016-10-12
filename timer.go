@@ -38,3 +38,20 @@ func (t *timer) Stop(instanceDims *DimMap) (time.Duration, error) {
 
 	return diff, t.send(instanceDims)
 }
+
+func (e *environment) timeBlock(name string, metricDims *DimMap, f func()) {
+	t := e.newTimer(name, metricDims)
+	t.Start()
+	defer t.Stop(nil)
+
+	f()
+}
+
+func (e *environment) timeBlockErr(name string, metricDims *DimMap, f func() error) error {
+	t := e.newTimer(name, metricDims)
+	t.Start()
+	err := f()
+	t.Stop(&DimMap{"had_error": err != nil})
+
+	return err
+}
