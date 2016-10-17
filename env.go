@@ -46,10 +46,11 @@ func (e *environment) send(m *metric, instanceDims *DimMap) error {
 
 	// copy it so we don't mess it up
 	metricToSend := metric{
-		Type:  m.Type,
-		Value: m.Value,
-		Name:  m.Name,
-		Dims:  DimMap{},
+		Type:      m.Type,
+		Value:     m.Value,
+		Name:      m.Name,
+		Timestamp: m.Timestamp,
+		Dims:      DimMap{},
 	}
 
 	// global
