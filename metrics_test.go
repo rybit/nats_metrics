@@ -3,6 +3,8 @@ package metrics
 import (
 	"testing"
 
+	"time"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,5 +41,7 @@ func TestDimensionalOverride(t *testing.T) {
 			assert.True(t, exists)
 			assert.EqualValues(t, v, dimVal)
 		}
+
+		assert.NotEqual(t, time.Time{}, m.Timestamp)
 	}
 }

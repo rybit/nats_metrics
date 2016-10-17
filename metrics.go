@@ -1,6 +1,9 @@
 package metrics
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 const (
 	// TimerType is the type for timers
@@ -11,14 +14,17 @@ const (
 	GaugeType MetricType = "gauge"
 )
 
+var zeroTime time.Time
+
 // MetricType describes what type the metric is
 type MetricType string
 
 type metric struct {
-	Name  string     `json:"name"`
-	Type  MetricType `json:"type"`
-	Value int64      `json:"value"`
-	Dims  DimMap     `json:"dimensions"`
+	Name      string     `json:"name"`
+	Type      MetricType `json:"type"`
+	Value     int64      `json:"value"`
+	Dims      DimMap     `json:"dimensions"`
+	Timestamp time.Time  `json:"timestamp"`
 
 	dimlock sync.Mutex
 	env     *environment
@@ -36,6 +42,10 @@ func (m *metric) send(instanceDims *DimMap) error {
 	if m.env == nil {
 		return InitError{errString{"Environment not initialized"}}
 	}
+	if m.Timestamp == zeroTime {
+		m.Timestamp = time.Now()
+	}
+
 	return m.env.send(m, instanceDims)
 }
 
