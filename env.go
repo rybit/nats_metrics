@@ -9,17 +9,20 @@ import (
 )
 
 func newEnvironment(nc *nats.Conn, subject string) (*environment, error) {
-	econn, err := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
-	if err != nil {
-		return nil, err
-	}
-
 	env := &environment{
 		subject:    subject,
-		nc:         econn,
 		dimlock:    sync.Mutex{},
 		globalDims: DimMap{},
 	}
+
+	if nc != nil {
+		econn, err := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
+		if err != nil {
+			return nil, err
+		}
+		env.nc = econn
+	}
+
 	if err := env.isReady(); err != nil {
 		return nil, err
 	}
@@ -77,6 +80,10 @@ func (e *environment) send(m *metric, instanceDims *DimMap) error {
 		return UnknownMetricTypeError{errString{fmt.Sprintf("unknown metric type: %s", m.Type)}}
 	}
 
+	if e.nc == nil {
+		return nil
+	}
+
 	return e.nc.Publish(e.subject, &metricToSend)
 }
 
@@ -87,9 +94,6 @@ func (e *environment) AddDimension(k string, v interface{}) {
 }
 
 func (e *environment) isReady() error {
-	if e.nc == nil {
-		return InitError{errString{"Nil nats connection provided"}}
-	}
 	if e.subject == "" {
 		return InitError{errString{"No subject provided"}}
 	}

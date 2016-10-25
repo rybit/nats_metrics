@@ -55,6 +55,16 @@ func TestSendMetric(t *testing.T) {
 	checkCounters(t, 1, 0, 0, env)
 }
 
+func TestSendMetricWithNilConn(t *testing.T) {
+	env, err := newEnvironment(nil, metricsSubject)
+	if assert.NoError(t, err) {
+		sender := env.newMetric("something", CounterType, nil)
+		sender.Value = 123
+		err := sender.send(nil)
+		assert.Nil(t, err)
+	}
+}
+
 func subscribe(t *testing.T) (*nats.Subscription, *environment) {
 	sub, err := nc.SubscribeSync(metricsSubject)
 	if err != nil {
