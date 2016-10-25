@@ -65,6 +65,41 @@ func TestSendMetricWithNilConn(t *testing.T) {
 	}
 }
 
+func TestSendWithTracer(t *testing.T) {
+	sub, env := subscribe(t)
+	defer sub.Unsubscribe()
+
+	called := false
+	env.tracer = func(m *metric) {
+		if assert.NotNil(t, m) {
+			assert.Equal(t, "something", m.Name)
+			assert.EqualValues(t, m.Value, 123)
+			assert.Equal(t, m.Type, CounterType)
+			assert.NotNil(t, m.Dims)
+			assert.Len(t, m.Dims, 0)
+		}
+		called = true
+	}
+
+	// create the metric
+	sender := env.newMetric("something", CounterType, nil)
+	sender.Value = 123
+	err := sender.send(nil)
+	assert.Nil(t, err)
+
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
+		assert.Equal(t, "something", m.Name)
+		assert.EqualValues(t, m.Value, 123)
+		assert.Equal(t, m.Type, CounterType)
+		assert.NotNil(t, m.Dims)
+		assert.Len(t, m.Dims, 0)
+	}
+	assert.True(t, called)
+	// validate counts
+	checkCounters(t, 1, 0, 0, env)
+}
+
 func subscribe(t *testing.T) (*nats.Subscription, *environment) {
 	sub, err := nc.SubscribeSync(metricsSubject)
 	if err != nil {

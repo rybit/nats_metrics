@@ -36,6 +36,8 @@ type environment struct {
 	dimlock    sync.Mutex
 	nc         *nats.EncodedConn
 
+	tracer func(m *metric)
+
 	// some metrics stuff
 	timersSent   int64
 	countersSent int64
@@ -78,6 +80,10 @@ func (e *environment) send(m *metric, instanceDims *DimMap) error {
 		atomic.AddInt64(&e.gaugesSent, 1)
 	default:
 		return UnknownMetricTypeError{errString{fmt.Sprintf("unknown metric type: %s", m.Type)}}
+	}
+
+	if e.tracer != nil {
+		go e.tracer(m)
 	}
 
 	if e.nc == nil {
