@@ -50,7 +50,7 @@ func TestTimeBlockErr(t *testing.T) {
 
 	wasCalled := false
 	madeErr := errors.New("garbage error")
-	err := env.timeBlockErr("something", &DimMap{"pokemon": "pikachu"}, func() error {
+	_, err := env.timeBlockErr("something", &DimMap{"pokemon": "pikachu"}, func() error {
 		wasCalled = true
 		return madeErr
 	})
