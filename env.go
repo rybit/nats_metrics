@@ -50,7 +50,7 @@ func (e *environment) send(m *metric, instanceDims *DimMap) error {
 	}
 
 	// copy it so we don't mess it up
-	metricToSend := metric{
+	metricToSend := RawMetric{
 		Type:      m.Type,
 		Value:     m.Value,
 		Name:      m.Name,
@@ -118,10 +118,11 @@ func addAll(into *DimMap, from *DimMap) {
 
 func (e *environment) newMetric(name string, t MetricType, dims *DimMap) *metric {
 	m := &metric{
-		Name: name,
-		Type: t,
-		Dims: make(DimMap),
-
+		RawMetric: RawMetric{
+			Name: name,
+			Type: t,
+			Dims: make(DimMap),
+		},
 		env:     e,
 		dimlock: sync.Mutex{},
 	}

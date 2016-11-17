@@ -19,12 +19,16 @@ var zeroTime time.Time
 // MetricType describes what type the metric is
 type MetricType string
 
-type metric struct {
+type RawMetric struct {
 	Name      string     `json:"name"`
 	Type      MetricType `json:"type"`
 	Value     int64      `json:"value"`
 	Dims      DimMap     `json:"dimensions"`
 	Timestamp time.Time  `json:"timestamp"`
+}
+
+type metric struct {
+	RawMetric
 
 	dimlock sync.Mutex
 	env     *environment
