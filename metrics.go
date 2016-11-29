@@ -46,11 +46,32 @@ func (m *metric) send(instanceDims *DimMap) error {
 	if m.env == nil {
 		return InitError{errString{"Environment not initialized"}}
 	}
-	if m.Timestamp == zeroTime {
-		m.Timestamp = time.Now()
+	metricToSend := &RawMetric{
+		Type:      m.Type,
+		Value:     m.Value,
+		Name:      m.Name,
+		Timestamp: m.Timestamp,
+		Dims:      DimMap{},
 	}
 
-	return m.env.send(m, instanceDims)
+	// global
+	m.env.dimlock.Lock()
+	addAll(&metricToSend.Dims, &m.env.globalDims)
+	m.env.dimlock.Unlock()
+
+	// metric
+	m.dimlock.Lock()
+	addAll(&metricToSend.Dims, &m.Dims)
+	m.dimlock.Unlock()
+
+	// instance
+	addAll(&metricToSend.Dims, instanceDims)
+
+	if metricToSend.Timestamp == zeroTime {
+		metricToSend.Timestamp = time.Now()
+	}
+
+	return m.env.send(metricToSend)
 }
 
 // DimMap is a map of dimensions

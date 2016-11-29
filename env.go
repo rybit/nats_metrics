@@ -36,7 +36,7 @@ type environment struct {
 	dimlock    sync.Mutex
 	nc         *nats.EncodedConn
 
-	tracer func(m *metric)
+	tracer func(m *RawMetric)
 
 	// some metrics stuff
 	timersSent   int64
@@ -44,32 +44,10 @@ type environment struct {
 	gaugesSent   int64
 }
 
-func (e *environment) send(m *metric, instanceDims *DimMap) error {
+func (e *environment) send(m *RawMetric) error {
 	if err := e.isReady(); err != nil {
 		return err
 	}
-
-	// copy it so we don't mess it up
-	metricToSend := RawMetric{
-		Type:      m.Type,
-		Value:     m.Value,
-		Name:      m.Name,
-		Timestamp: m.Timestamp,
-		Dims:      DimMap{},
-	}
-
-	// global
-	e.dimlock.Lock()
-	addAll(&metricToSend.Dims, &e.globalDims)
-	e.dimlock.Unlock()
-
-	// metric
-	m.dimlock.Lock()
-	addAll(&metricToSend.Dims, &m.Dims)
-	m.dimlock.Unlock()
-
-	// instance
-	addAll(&metricToSend.Dims, instanceDims)
 
 	switch m.Type {
 	case CounterType:
@@ -90,7 +68,7 @@ func (e *environment) send(m *metric, instanceDims *DimMap) error {
 		return nil
 	}
 
-	return e.nc.Publish(e.subject, &metricToSend)
+	return e.nc.Publish(e.subject, &m)
 }
 
 func (e *environment) AddDimension(k string, v interface{}) {

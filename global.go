@@ -65,7 +65,7 @@ func TimeBlockErr(name string, metricDims *DimMap, f func() error) (time.Duratio
 	return globalEnv.timeBlockErr(name, metricDims, f)
 }
 
-func Trace(tracer func(m *metric)) {
+func Trace(tracer func(m *RawMetric)) {
 	globalEnv.tracer = tracer
 }
 

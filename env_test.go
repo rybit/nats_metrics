@@ -70,7 +70,7 @@ func TestSendWithTracer(t *testing.T) {
 	defer sub.Unsubscribe()
 
 	called := false
-	env.tracer = func(m *metric) {
+	env.tracer = func(m *RawMetric) {
 		if assert.NotNil(t, m) {
 			assert.Equal(t, "something", m.Name)
 			assert.EqualValues(t, m.Value, 123)
