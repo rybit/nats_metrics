@@ -42,9 +42,28 @@ It publishes values as JSON:
   "name": "metric.name",
   "type": "gauge",
   "value": 1,
+  "timestamp": "2009-11-10T23:00:00Z",
   "dimensions": {
     "app": "example",
     "key": "value"
   }
 }
+```
+
+
+## timestamps
+
+A gauge, counter, and timer each have a `SetTimestamp` method that will let you override the system generated timestamp. Note _this is for all calls on that metric going forward_. That is to say, if you set it that timestamp will always be sent. To reset it (aka let the timestamp be system generated) you can just reset it to `time.Zero`.
+
+``` go
+ts := time.Now()
+counter := metrics.NewCounter("metric.name", nil)
+counter.SetTimestamp(ts)
+counter.Count(nil) // 'timestamp' will == ts
+
+<- time.After(1 * time.Second)
+counter.Count(nil) // 'timestamp' will == ts
+
+counter.SetTimestamp(time.Time{})
+counter.Count(nil) // 'timestamp' will != ts, it will be set by the system (time.Now())
 ```
