@@ -1,12 +1,16 @@
 package metrics
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 // Gauge keeps a running measure of the value at that moment
 type Gauge interface {
 	Increment(*DimMap) error
 	Decrement(*DimMap) error
 	Set(int64, *DimMap) error
+	SetTimestamp(time.Time)
 }
 
 type gauge struct {

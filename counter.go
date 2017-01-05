@@ -1,7 +1,10 @@
 package metrics
 
+import "time"
+
 // Counter will send when an event occurs
 type Counter interface {
+	SetTimestamp(time.Time)
 	Count(*DimMap) error
 	CountN(int64, *DimMap) error
 }

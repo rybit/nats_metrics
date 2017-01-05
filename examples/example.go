@@ -24,9 +24,7 @@ func main() {
 		"space": "metric",
 		"magic": "value",
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	c.Count(&metrics.DimMap{
 		"space":    "instance",
 		"instance": "level",

@@ -6,6 +6,7 @@ import "time"
 type Timer interface {
 	Start() time.Time
 	Stop(instanceDims *DimMap) (time.Duration, error)
+	SetTimestamp(time.Time)
 }
 
 type timer struct {

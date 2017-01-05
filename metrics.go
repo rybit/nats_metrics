@@ -34,6 +34,10 @@ type metric struct {
 	env     *environment
 }
 
+func (m *metric) SetTimestamp(t time.Time) {
+	m.Timestamp = t
+}
+
 // AddDimension will add this dimension with locking
 func (m *metric) AddDimension(key string, value interface{}) *metric {
 	m.dimlock.Lock()

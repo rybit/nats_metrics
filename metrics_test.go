@@ -45,3 +45,49 @@ func TestDimensionalOverride(t *testing.T) {
 		assert.NotEqual(t, time.Time{}, m.Timestamp)
 	}
 }
+
+func TestSetTimestampCounter(t *testing.T) {
+	sub, env := subscribe(t)
+	defer sub.Unsubscribe()
+	ts := time.Now()
+
+	c := env.newCounter("thingy", nil)
+	c.SetTimestamp(ts)
+	c.Count(nil)
+
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
+		assert.EqualValues(t, ts.UnixNano(), m.Timestamp.UnixNano())
+	}
+}
+
+func TestSetTimestampTimer(t *testing.T) {
+	sub, env := subscribe(t)
+	defer sub.Unsubscribe()
+	ts := time.Now()
+
+	timer := env.newTimer("thingy", nil)
+	timer.SetTimestamp(ts)
+	timer.Start()
+	timer.Stop(nil)
+
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
+		assert.EqualValues(t, ts.UnixNano(), m.Timestamp.UnixNano())
+	}
+}
+
+func TestSetTimestampGauge(t *testing.T) {
+	sub, env := subscribe(t)
+	defer sub.Unsubscribe()
+	ts := time.Now()
+
+	g := env.newGauge("thingy", nil)
+	g.SetTimestamp(ts)
+	g.Increment(nil)
+
+	m := readOne(t, sub)
+	if assert.NotNil(t, m) {
+		assert.EqualValues(t, ts.UnixNano(), m.Timestamp.UnixNano())
+	}
+}
