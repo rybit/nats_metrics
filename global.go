@@ -72,3 +72,7 @@ func Trace(tracer func(m *RawMetric)) {
 func Count(name string, metricDims DimMap) error {
 	return globalEnv.newCounter(name, nil).Count(metricDims)
 }
+
+func CountN(name string, val int64, metricDims DimMap) error {
+	return globalEnv.newCounter(name, nil).CountN(val, metricDims)
+}
