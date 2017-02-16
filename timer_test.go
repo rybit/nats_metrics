@@ -32,7 +32,7 @@ func TestTimeBlock(t *testing.T) {
 	defer sub.Unsubscribe()
 
 	wasCalled := false
-	env.timeBlock("something", &DimMap{"pokemon": "pikachu"}, func() {
+	env.timeBlock("something", DimMap{"pokemon": "pikachu"}, func() {
 		wasCalled = true
 	})
 
@@ -50,7 +50,7 @@ func TestTimeBlockErr(t *testing.T) {
 
 	wasCalled := false
 	madeErr := errors.New("garbage error")
-	_, err := env.timeBlockErr("something", &DimMap{"pokemon": "pikachu"}, func() error {
+	_, err := env.timeBlockErr("something", DimMap{"pokemon": "pikachu"}, func() error {
 		wasCalled = true
 		return madeErr
 	})

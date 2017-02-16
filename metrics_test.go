@@ -15,13 +15,13 @@ func TestDimensionalOverride(t *testing.T) {
 	env.AddDimension("global-val", 12)
 	env.AddDimension("metric-overide", "global-level")
 	env.AddDimension("instance-overide", "global-level")
-	sender := env.newMetric("thing.one", CounterType, &DimMap{
+	sender := env.newMetric("thing.one", CounterType, DimMap{
 		"metric-val":       456,
 		"metric-overide":   "metric-level",
 		"instance-overide": "metric-level",
 	})
 
-	sender.send(&DimMap{
+	sender.send(DimMap{
 		"instance-overide": "instance-level",
 		"instance-val":     789,
 	})

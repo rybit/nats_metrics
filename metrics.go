@@ -46,7 +46,7 @@ func (m *metric) AddDimension(key string, value interface{}) *metric {
 	return m
 }
 
-func (m *metric) send(instanceDims *DimMap) error {
+func (m *metric) send(instanceDims DimMap) error {
 	if m.env == nil {
 		return InitError{errString{"Environment not initialized"}}
 	}
@@ -60,16 +60,16 @@ func (m *metric) send(instanceDims *DimMap) error {
 
 	// global
 	m.env.dimlock.Lock()
-	addAll(&metricToSend.Dims, &m.env.globalDims)
+	addAll(metricToSend.Dims, m.env.globalDims)
 	m.env.dimlock.Unlock()
 
 	// metric
 	m.dimlock.Lock()
-	addAll(&metricToSend.Dims, &m.Dims)
+	addAll(metricToSend.Dims, m.Dims)
 	m.dimlock.Unlock()
 
 	// instance
-	addAll(&metricToSend.Dims, instanceDims)
+	addAll(metricToSend.Dims, instanceDims)
 
 	if metricToSend.Timestamp == zeroTime {
 		metricToSend.Timestamp = time.Now()

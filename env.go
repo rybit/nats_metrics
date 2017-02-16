@@ -84,17 +84,17 @@ func (e *environment) isReady() error {
 	return nil
 }
 
-func addAll(into *DimMap, from *DimMap) {
+func addAll(into DimMap, from DimMap) {
 	if into != nil {
 		if from != nil {
-			for k, v := range *from {
-				(*into)[k] = v
+			for k, v := range from {
+				into[k] = v
 			}
 		}
 	}
 }
 
-func (e *environment) newMetric(name string, t MetricType, dims *DimMap) *metric {
+func (e *environment) newMetric(name string, t MetricType, dims DimMap) *metric {
 	m := &metric{
 		RawMetric: RawMetric{
 			Name: name,
@@ -106,7 +106,7 @@ func (e *environment) newMetric(name string, t MetricType, dims *DimMap) *metric
 	}
 
 	if dims != nil {
-		for k, v := range *dims {
+		for k, v := range dims {
 			m.AddDimension(k, v)
 		}
 	}

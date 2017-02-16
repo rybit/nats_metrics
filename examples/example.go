@@ -20,12 +20,12 @@ func main() {
 
 	metrics.AddDimension("space", "global")
 	metrics.AddDimension("app", "example")
-	c := metrics.NewCounter("one-ups", &metrics.DimMap{
+	c := metrics.NewCounter("one-ups", metrics.DimMap{
 		"space": "metric",
 		"magic": "value",
 	})
 
-	c.Count(&metrics.DimMap{
+	c.Count(metrics.DimMap{
 		"space":    "instance",
 		"instance": "level",
 	})

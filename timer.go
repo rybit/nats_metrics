@@ -5,7 +5,7 @@ import "time"
 // Timer will measure the time between two events and send that
 type Timer interface {
 	Start() time.Time
-	Stop(instanceDims *DimMap) (time.Duration, error)
+	Stop(instanceDims DimMap) (time.Duration, error)
 	SetTimestamp(time.Time)
 }
 
@@ -14,7 +14,7 @@ type timer struct {
 	startTime *time.Time
 }
 
-func (e *environment) newTimer(name string, metricDims *DimMap) Timer {
+func (e *environment) newTimer(name string, metricDims DimMap) Timer {
 	m := e.newMetric(name, TimerType, metricDims)
 	return &timer{
 		metric: *m,
@@ -27,7 +27,7 @@ func (t *timer) Start() time.Time {
 	return now
 }
 
-func (t *timer) Stop(instanceDims *DimMap) (time.Duration, error) {
+func (t *timer) Stop(instanceDims DimMap) (time.Duration, error) {
 	now := time.Now()
 
 	if t.startTime == nil {
@@ -40,7 +40,7 @@ func (t *timer) Stop(instanceDims *DimMap) (time.Duration, error) {
 	return diff, t.send(instanceDims)
 }
 
-func (e *environment) timeBlock(name string, metricDims *DimMap, f func()) time.Duration {
+func (e *environment) timeBlock(name string, metricDims DimMap, f func()) time.Duration {
 	t := e.newTimer(name, metricDims)
 	t.Start()
 	f()
@@ -48,11 +48,11 @@ func (e *environment) timeBlock(name string, metricDims *DimMap, f func()) time.
 	return dur
 }
 
-func (e *environment) timeBlockErr(name string, metricDims *DimMap, f func() error) (time.Duration, error) {
+func (e *environment) timeBlockErr(name string, metricDims DimMap, f func() error) (time.Duration, error) {
 	t := e.newTimer(name, metricDims)
 	t.Start()
 	err := f()
-	dur, _ := t.Stop(&DimMap{"had_error": err != nil})
+	dur, _ := t.Stop(DimMap{"had_error": err != nil})
 
 	return dur, err
 }
