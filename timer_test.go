@@ -13,7 +13,7 @@ func TestTimeIt(t *testing.T) {
 	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
-	timer := env.newTimer("something", nil)
+	timer := env.NewTimer("something", nil)
 	start := timer.Start()
 	<-time.After(time.Millisecond * 100)
 	stop := time.Now()

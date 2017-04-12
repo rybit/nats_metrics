@@ -9,7 +9,7 @@ type Counter interface {
 	CountN(int64, DimMap) error
 }
 
-func (e *environment) newCounter(name string, metricDims DimMap) Counter {
+func (e *Environment) NewCounter(name string, metricDims DimMap) Counter {
 	return e.newMetric(name, CounterType, metricDims)
 }
 

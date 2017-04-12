@@ -31,7 +31,7 @@ type metric struct {
 	RawMetric
 
 	dimlock sync.Mutex
-	env     *environment
+	env     *Environment
 }
 
 func (m *metric) SetTimestamp(t time.Time) {

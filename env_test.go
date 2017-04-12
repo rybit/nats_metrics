@@ -7,18 +7,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/nats"
 	"github.com/nats-io/nats/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var nc *nats.Conn
+var s *server.Server
 
 const metricsSubject = "test.metrics"
 
 func TestMain(m *testing.M) {
 
-	s := test.RunDefaultServer()
+	s = test.RunDefaultServer()
 	defer s.Shutdown()
 
 	var err error
@@ -56,7 +59,7 @@ func TestSendMetric(t *testing.T) {
 }
 
 func TestSendMetricWithNilConn(t *testing.T) {
-	env, err := newEnvironment(nil, metricsSubject)
+	env, err := NewEnvironment(nil, metricsSubject)
 	if assert.NoError(t, err) {
 		sender := env.newMetric("something", CounterType, nil)
 		sender.Value = 123
@@ -100,13 +103,41 @@ func TestSendWithTracer(t *testing.T) {
 	checkCounters(t, 1, 0, 0, env)
 }
 
-func subscribe(t *testing.T) (*nats.Subscription, *environment) {
+func TestSeparateEnv(t *testing.T) {
+	f1, err := NewEnvironment(nc, "first-env")
+	require.NoError(t, err)
+	f2, err := NewEnvironment(nc, "second-env")
+	require.NoError(t, err)
+
+	sub1, err := nc.SubscribeSync("first-env")
+	require.NoError(t, err)
+	sub2, err := nc.SubscribeSync("second-env")
+	require.NoError(t, err)
+
+	require.NoError(t, f1.NewCounter("c1", nil).Count(nil))
+	require.NoError(t, f2.NewCounter("c2", nil).Count(nil))
+
+	raw1, err := sub1.NextMsg(time.Second)
+	require.NoError(t, err)
+	raw2, err := sub2.NextMsg(time.Second)
+	require.NoError(t, err)
+
+	m1 := new(RawMetric)
+	m2 := new(RawMetric)
+	require.NoError(t, json.Unmarshal(raw1.Data, m1))
+	require.NoError(t, json.Unmarshal(raw2.Data, m2))
+
+	assert.Equal(t, "c1", m1.Name)
+	assert.Equal(t, "c2", m2.Name)
+}
+
+func subscribe(t *testing.T) (*nats.Subscription, *Environment) {
 	sub, err := nc.SubscribeSync(metricsSubject)
 	if err != nil {
 		assert.FailNow(t, "Failed to subscribe: "+err.Error())
 	}
 
-	env, err := newEnvironment(nc, metricsSubject)
+	env, err := NewEnvironment(nc, metricsSubject)
 	if err != nil {
 		assert.FailNow(t, "Failed to create test env")
 	}
@@ -114,7 +145,7 @@ func subscribe(t *testing.T) (*nats.Subscription, *environment) {
 	return sub, env
 }
 
-func checkCounters(t *testing.T, counters, timers, gauges int, env *environment) {
+func checkCounters(t *testing.T, counters, timers, gauges int, env *Environment) {
 	assert.EqualValues(t, counters, env.countersSent)
 	assert.EqualValues(t, timers, env.timersSent)
 	assert.EqualValues(t, gauges, env.gaugesSent)

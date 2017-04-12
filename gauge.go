@@ -18,7 +18,7 @@ type gauge struct {
 	valueLock sync.Mutex
 }
 
-func (e *environment) newGauge(name string, metricDims DimMap) Gauge {
+func (e *Environment) NewGauge(name string, metricDims DimMap) Gauge {
 	m := e.newMetric(name, GaugeType, metricDims)
 	return &gauge{
 		metric:    *m,

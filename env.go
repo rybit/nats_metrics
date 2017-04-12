@@ -8,8 +8,8 @@ import (
 	"github.com/nats-io/nats"
 )
 
-func newEnvironment(nc *nats.Conn, subject string) (*environment, error) {
-	env := &environment{
+func NewEnvironment(nc *nats.Conn, subject string) (*Environment, error) {
+	env := &Environment{
 		subject:    subject,
 		dimlock:    sync.Mutex{},
 		globalDims: DimMap{},
@@ -30,7 +30,7 @@ func newEnvironment(nc *nats.Conn, subject string) (*environment, error) {
 	return env, nil
 }
 
-type environment struct {
+type Environment struct {
 	subject    string
 	globalDims DimMap
 	dimlock    sync.Mutex
@@ -44,7 +44,7 @@ type environment struct {
 	gaugesSent   int64
 }
 
-func (e *environment) send(m *RawMetric) error {
+func (e *Environment) send(m *RawMetric) error {
 	if err := e.isReady(); err != nil {
 		return err
 	}
@@ -71,13 +71,13 @@ func (e *environment) send(m *RawMetric) error {
 	return e.nc.Publish(e.subject, &m)
 }
 
-func (e *environment) AddDimension(k string, v interface{}) {
+func (e *Environment) AddDimension(k string, v interface{}) {
 	e.dimlock.Lock()
 	defer e.dimlock.Unlock()
 	e.globalDims[k] = v
 }
 
-func (e *environment) isReady() error {
+func (e *Environment) isReady() error {
 	if e.subject == "" {
 		return InitError{errString{"No subject provided"}}
 	}
@@ -94,7 +94,7 @@ func addAll(into DimMap, from DimMap) {
 	}
 }
 
-func (e *environment) newMetric(name string, t MetricType, dims DimMap) *metric {
+func (e *Environment) newMetric(name string, t MetricType, dims DimMap) *metric {
 	m := &metric{
 		RawMetric: RawMetric{
 			Name: name,

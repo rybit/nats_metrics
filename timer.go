@@ -14,7 +14,7 @@ type timer struct {
 	startTime *time.Time
 }
 
-func (e *environment) newTimer(name string, metricDims DimMap) Timer {
+func (e *Environment) NewTimer(name string, metricDims DimMap) Timer {
 	m := e.newMetric(name, TimerType, metricDims)
 	return &timer{
 		metric: *m,
@@ -40,16 +40,16 @@ func (t *timer) Stop(instanceDims DimMap) (time.Duration, error) {
 	return diff, t.send(instanceDims)
 }
 
-func (e *environment) timeBlock(name string, metricDims DimMap, f func()) time.Duration {
-	t := e.newTimer(name, metricDims)
+func (e *Environment) timeBlock(name string, metricDims DimMap, f func()) time.Duration {
+	t := e.NewTimer(name, metricDims)
 	t.Start()
 	f()
 	dur, _ := t.Stop(nil)
 	return dur
 }
 
-func (e *environment) timeBlockErr(name string, metricDims DimMap, f func() error) (time.Duration, error) {
-	t := e.newTimer(name, metricDims)
+func (e *Environment) timeBlockErr(name string, metricDims DimMap, f func() error) (time.Duration, error) {
+	t := e.NewTimer(name, metricDims)
 	t.Start()
 	err := f()
 	dur, _ := t.Stop(DimMap{"had_error": err != nil})

@@ -8,7 +8,7 @@ import (
 	"github.com/nats-io/nats"
 )
 
-var globalEnv *environment
+var globalEnv *Environment
 
 var initLock = sync.Mutex{}
 
@@ -19,7 +19,7 @@ func Init(nc *nats.Conn, subject string) error {
 
 	if globalEnv == nil {
 		var err error
-		globalEnv, err = newEnvironment(nc, subject)
+		globalEnv, err = NewEnvironment(nc, subject)
 		if err != nil {
 			return err
 		}
@@ -28,6 +28,10 @@ func Init(nc *nats.Conn, subject string) error {
 	}
 
 	return globalEnv.isReady()
+}
+
+func GlobalEnv() *Environment {
+	return globalEnv
 }
 
 // AddDimension will let you store a dimension in the global space
@@ -39,17 +43,17 @@ func AddDimension(key string, value interface{}) {
 
 // NewCounter creates a named counter with these dimensions
 func NewCounter(name string, metricDims DimMap) Counter {
-	return globalEnv.newCounter(name, metricDims)
+	return globalEnv.NewCounter(name, metricDims)
 }
 
 // NewGauge creates a named gauge with these dimensions
 func NewGauge(name string, metricDims DimMap) Gauge {
-	return globalEnv.newGauge(name, metricDims)
+	return globalEnv.NewGauge(name, metricDims)
 }
 
 // NewTimer creates a named timer with these dimensions
 func NewTimer(name string, metricDims DimMap) Timer {
-	timer := globalEnv.newTimer(name, metricDims)
+	timer := globalEnv.NewTimer(name, metricDims)
 	timer.Start()
 	return timer
 }
@@ -70,9 +74,9 @@ func Trace(tracer func(m *RawMetric)) {
 }
 
 func Count(name string, metricDims DimMap) error {
-	return globalEnv.newCounter(name, nil).Count(metricDims)
+	return globalEnv.NewCounter(name, nil).Count(metricDims)
 }
 
 func CountN(name string, val int64, metricDims DimMap) error {
-	return globalEnv.newCounter(name, nil).CountN(val, metricDims)
+	return globalEnv.NewCounter(name, nil).CountN(val, metricDims)
 }

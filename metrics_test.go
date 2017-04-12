@@ -51,7 +51,7 @@ func TestSetTimestampCounter(t *testing.T) {
 	defer sub.Unsubscribe()
 	ts := time.Now()
 
-	c := env.newCounter("thingy", nil)
+	c := env.NewCounter("thingy", nil)
 	c.SetTimestamp(ts)
 	c.Count(nil)
 
@@ -66,7 +66,7 @@ func TestSetTimestampTimer(t *testing.T) {
 	defer sub.Unsubscribe()
 	ts := time.Now()
 
-	timer := env.newTimer("thingy", nil)
+	timer := env.NewTimer("thingy", nil)
 	timer.SetTimestamp(ts)
 	timer.Start()
 	timer.Stop(nil)
@@ -82,7 +82,7 @@ func TestSetTimestampGauge(t *testing.T) {
 	defer sub.Unsubscribe()
 	ts := time.Now()
 
-	g := env.newGauge("thingy", nil)
+	g := env.NewGauge("thingy", nil)
 	g.SetTimestamp(ts)
 	g.Increment(nil)
 

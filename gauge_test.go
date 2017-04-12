@@ -10,7 +10,7 @@ func TestIncrement(t *testing.T) {
 	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
-	g := env.newGauge("something", nil)
+	g := env.NewGauge("something", nil)
 	g.Increment(nil)
 
 	m := readOne(t, sub)
@@ -23,7 +23,7 @@ func TestDecrement(t *testing.T) {
 	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
-	g := env.newGauge("something", nil)
+	g := env.NewGauge("something", nil)
 	g.Decrement(nil)
 
 	m := readOne(t, sub)
@@ -36,7 +36,7 @@ func TestSet(t *testing.T) {
 	sub, env := subscribe(t)
 	defer sub.Unsubscribe()
 
-	g := env.newGauge("something", nil)
+	g := env.NewGauge("something", nil)
 	g.Set(123, nil)
 
 	m := readOne(t, sub)
